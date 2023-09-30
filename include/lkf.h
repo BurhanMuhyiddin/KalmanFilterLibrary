@@ -1,3 +1,6 @@
+#ifndef LKF_H_
+#define LKF_H_
+
 #include "kalman_filter.h"
 
 class LinearKalmanFilter : public KalmanFilter {
@@ -62,3 +65,5 @@ private:
     Eigen::MatrixXd controlMatrix_;             /**< Control matrix [G] */
     Eigen::MatrixXd observationMatrix_;         /**< Observation matrix [H] */
 };
+
+#endif // LKF_H_

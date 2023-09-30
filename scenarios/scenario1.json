@@ -1,0 +1,36 @@
+{
+    "KF": {
+        "dim": 1,
+        "dt": 0.25,
+        "r": [20],
+        "sig_a": [0.1],
+        "g": -9.8,
+
+        "strModel": "linear",
+        "strNoiseModel": "discrete",
+
+        "x0": [0, 0],
+        "u0": [0],
+        "P0": [500, 500]
+    },
+
+    "noiseGenAlt": {
+        "seed": 456
+    },
+
+    "noiseGenAcc": {
+        "seed": 789
+    },
+
+    "scenario": {
+        "isPlotScenario": false,
+        "g": -9.8,
+        "x0": 20,
+        "v0": 0,
+        "a": 30,
+        "N": 30,
+
+        "sig_a": [0.1],
+        "seed": 123
+    }
+}

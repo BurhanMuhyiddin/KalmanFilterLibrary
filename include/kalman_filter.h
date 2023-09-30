@@ -1,3 +1,6 @@
+#ifndef KALMAN_FILTER_H_
+#define KALMAN_FILTER_H_
+
 #include <iostream>
 
 #include <Eigen/Dense>
@@ -106,3 +109,5 @@ protected:
     Eigen::MatrixXd measurementCovariance_;         /**< Measurement covariance [R]*/
     Eigen::MatrixXd processNoiseCovariance_;        /**< Process noise covariance [Q] */
 };
+
+#endif // KALMAN_FILTER_H_

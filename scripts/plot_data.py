@@ -1,39 +1,59 @@
-import pandas as pd
+from helper_functions import read_data, plot_data
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-file_path = "../data/state.txt"
+import json
 
-columns = []
-data = []
+SCENARIO1_PARAMS = "scenarios/scenario1.json"
+PATH_PLOT_PARAMS = "parameters/plot_params.json"
+PATH_GT_ALTITUDE = "data/gtAltitude.txt"
+PATH_MEAS_ALTITUDE = "data/measAltitude.txt"
+PATH_GT_VELOCITY = "data/gtVelocity.txt"
+PATH_ESTIMATED_STATE = "data/state.txt"
+PATH_ESTIMATE_COVARIANCE = "data/estimateCovariance.txt"
 
-with open(file_path, 'r') as file:
-    in_data_section = False
-    in_columns_section = False
+# Read plot parameters
+plot_params_file = open(PATH_PLOT_PARAMS)
 
-    for line in file:
-        line = line.strip()
+plot_params = json.load(plot_params_file)
 
-        if line == 'data':
-            in_data_section = True
-            continue
-        if line.startswith('columns'):
-            in_columns_section = True
-            continue
+plot_gt_data = plot_params["flags"]["plot_gt_data"]
+plot_out_data = plot_params["flags"]["plot_out_data"]
+plot_meas_data = plot_params["flags"]["plot_meas_data"]
+plot_conf_interval = plot_params["flags"]["plot_conf_interval"]
 
-        if in_data_section:
-            values = line.split(',')
-            data.append(values)
-        elif in_columns_section:
-            in_columns_section = False
-            columns = line.split(',')[:-1]
+# Read time sequence for plots
+scenario1_params_file = open(SCENARIO1_PARAMS)
+scenario1_params = json.load(scenario1_params_file)
+dt = scenario1_params["KF"]["dt"]
+N = scenario1_params["scenario"]["N"]
+t = np.arange(0, N*dt, dt)
 
-df = pd.DataFrame(data, columns=columns)
+# Read data
+gt_alt, column_names_alt = read_data(file_path = PATH_GT_ALTITUDE)
+gt_vel, column_names_vel = read_data(file_path = PATH_GT_VELOCITY)
+gt_state = np.vstack([gt_alt, gt_vel])
+gt_state = np.transpose(gt_state, (1, 0, 2))
 
-df = df.apply(pd.to_numeric, errors='ignore')
+meas_alt, column_names_alt = read_data(file_path = PATH_MEAS_ALTITUDE)
+meas_alt = np.transpose(meas_alt, (1, 0, 2))
 
-altitude = df['altitude'].to_numpy(dtype=np.float64)
-velocity = df['velocity'].to_numpy(dtype=np.float64)
+estimated_states, column_names = read_data(file_path = PATH_ESTIMATED_STATE)
+estimate_covariance, _ = read_data(file_path = PATH_ESTIMATE_COVARIANCE)
 
-plt.plot(altitude)
-plt.show()
+# Create data dictionary to pass to the plot function
+data_dict = {
+    "plot_gt": plot_gt_data,
+    "plot_out": plot_out_data,
+    "plot_meas": plot_meas_data,
+    "plot_conf_int": plot_conf_interval,
+
+    "gt_data": gt_state,
+    "est_data": estimated_states,
+    "est_covariance": estimate_covariance,
+    "meas_data": meas_alt
+}
+
+# Plot data with the specified parameters
+plot_data(data_dict, t, columns=column_names)
