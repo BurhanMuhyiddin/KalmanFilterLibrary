@@ -1,0 +1,28 @@
+{
+    "KF": {
+        "dim": 2,
+        "dt": 1,
+        "r_s": [3],
+        "r_m": [5, 0.5],
+        "sig_a": [0.2],
+
+        "strModel": "quadratic",
+        "strNoiseModel": "discrete",
+
+        "x0": [0, 0, 0, 0, 0, 0],
+        "P0": [500, 500, 500, 500, 500, 500]
+    },
+
+    "noiseGen": {
+        "seed": 123
+    },
+
+    "scenario": {
+        "isPlotScenario": false,
+        "v": 25,
+        "L": 400,
+        "R": 300,
+        "sig_a": [0.2],
+        "seed": 789
+    }
+}

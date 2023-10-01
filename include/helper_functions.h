@@ -94,7 +94,7 @@ Eigen::MatrixXd generate_noise(int nrows, int ncols, double mean=0.0, double sig
     return noise;
 }
 
-void add_noise(Eigen::MatrixXd& x, const Eigen::VectorXd& sigma, int seed=-1) {
+void add_noise(Eigen::MatrixXd& x, const std::vector<double>& sigma, int seed=-1) {
 
     Eigen::MatrixXd noise = generate_noise(x.rows(), x.cols(), 0.0, 1.0, seed);
 
@@ -103,7 +103,7 @@ void add_noise(Eigen::MatrixXd& x, const Eigen::VectorXd& sigma, int seed=-1) {
     }
 
     for (int i = 0; i < noise.cols(); i++) {
-        noise.col(i) *= sigma(i);
+        noise.col(i) *= sigma[i];
     }
 
     if (noise.cols() > noise.rows()) {

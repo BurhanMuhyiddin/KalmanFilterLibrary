@@ -11,7 +11,7 @@ namespace {
 
 int main()
 {
-    Scenario1& scenario1 = get_scenario<Scenario1>(SCENARIO);
+    Scenario1& scenario1 = Scenario1::GetInstance();
 
     // Read data
     auto gt_data = scenario1.GetGtDataTemplate();
@@ -28,11 +28,9 @@ int main()
     int measurementSize = 1;
     int inputSize = 1;
 
-    Eigen::VectorXd initState = Eigen::VectorXd::Zero(stateSize);
+    Eigen::VectorXd initState = scenario1.GetInitState(stateSize);
     
-    Eigen::MatrixXd initEstimateCovariance = Eigen::MatrixXd::Zero(stateSize, stateSize);
-    initEstimateCovariance(0, 0) = 500;
-    initEstimateCovariance(1, 1) = 500;
+    Eigen::MatrixXd initEstimateCovariance = scenario1.GetInitEstimateCovariance(stateSize);
 
     LinearKalmanFilter LKF(stateSize, measurementSize, inputSize, initState, initEstimateCovariance);
 
