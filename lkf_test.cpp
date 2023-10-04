@@ -14,19 +14,16 @@ int main()
     Scenario1& scenario1 = Scenario1::GetInstance();
 
     // Read data
-    auto gt_data = scenario1.GetGtDataTemplate();
-    scenario1.GetGtData(gt_data);
+    auto gt_data = scenario1.GetGtData();
 
-    auto meas_data = scenario1.GetMeasDataTemplate();
-    scenario1.GetMeasData(gt_data, meas_data);
+    auto meas_data = scenario1.GetMeasData(gt_data);
 
-    auto inp_data = scenario1.GetInpDataTemplate();
-    scenario1.GetInpData(gt_data, inp_data);
+    auto inp_data = scenario1.GetInpData(gt_data);
 
     // Create KF instance and initialize
-    int stateSize = 2;
-    int measurementSize = 1;
-    int inputSize = 1;
+    int stateSize = scenario1.kf_params_.state_dim;
+    int measurementSize = scenario1.kf_params_.meas_dim;
+    int inputSize = scenario1.kf_params_.inp_dim;
 
     Eigen::VectorXd initState = scenario1.GetInitState(stateSize);
     

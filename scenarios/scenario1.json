@@ -1,6 +1,8 @@
 {
     "KF": {
-        "dim": 1,
+        "state_dim": 2,
+        "meas_dim": 1,
+        "inp_dim": 1,
         "dt": 0.25,
         "r": [20],
         "sig_a": [0.1],

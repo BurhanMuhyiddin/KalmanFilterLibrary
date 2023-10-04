@@ -27,7 +27,9 @@ private:
     };
 
     struct KF {
-        int dim;
+        int state_dim;
+        int inp_dim;
+        int meas_dim;
         double dt;
         std::vector<double> r;
         std::vector<double> sig_a;
@@ -63,7 +65,9 @@ protected:
         std::ifstream f("../scenarios/scenario1.json");
         auto parameters = nlohmann::json::parse(f);
 
-        kf_params_.dim = parameters["KF"]["dim"].get<int>();
+        kf_params_.state_dim = parameters["KF"]["state_dim"].get<int>();
+        kf_params_.inp_dim = parameters["KF"]["inp_dim"].get<int>();
+        kf_params_.meas_dim = parameters["KF"]["meas_dim"].get<int>();
         kf_params_.dt = parameters["KF"]["dt"].get<double>();
         kf_params_.g = parameters["KF"]["g"].get<double>();
         kf_params_.P0 = parameters["KF"]["P0"].get<std::vector<double>>();
@@ -96,22 +100,9 @@ protected:
     Scenario1& operator=(Scenario1&&) = delete;
 
 public:
-    GtData GetGtDataTemplate() const {
-        GtData gtData;
-        return gtData;
-    }
+    GtData GetGtData() const {
+        GtData gt_data;
 
-    MeasData GetMeasDataTemplate() const {
-        MeasData measData;
-        return measData;
-    }
-
-    InpData GetInpDataTemplate() const {
-        InpData inpData;
-        return inpData;
-    }
-
-    void GetGtData(GtData& gt_data) const {
         double x0 = scenario_params_.x0;
         double v0 = scenario_params_.v0;
         double a = scenario_params_.a;
@@ -143,9 +134,13 @@ public:
         gt_data.alt = x;
         gt_data.vel = v;
         gt_data.acc = a_vec;
+
+        return gt_data;
     }
 
-    void GetMeasData(const GtData& gt_data, MeasData& meas_data) const {
+    MeasData GetMeasData(const GtData& gt_data) const {
+        MeasData meas_data;
+
         auto r = kf_params_.r;
         // Eigen::VectorXd r_vec(r.size());
         // for (int i = 0; i < r.size(); i++) {
@@ -165,9 +160,12 @@ public:
         add_noise(Z, r, alt_noise_params);
 
         meas_data.alt = Eigen::VectorXd(Z.col(0));
+        return meas_data;
     }
 
-    void GetInpData(const GtData& gt_data, InpData& inp_data) const {
+    InpData GetInpData(const GtData& gt_data) const {
+        InpData inp_data;
+
         std::vector<double> sig_a = scenario_params_.sig_a;
         // Eigen::VectorXd sig_a_vec(sig_a.size());
         // for (int i = 0; i < sig_a.size(); i++) {
@@ -185,6 +183,8 @@ public:
         auto U = A + G;
 
         inp_data.acc = Eigen::VectorXd(U.col(0));
+
+        return inp_data;
     }
 
     Eigen::MatrixXd GetStateTransitionMatrix(int state_size) const {
@@ -266,7 +266,9 @@ private:
 class Scenario2 {
 private:
     struct KF {
-        int dim;
+        int state_dim;
+        int meas_dim;
+        int inp_dim;
         double dt;
         std::vector<double> r_s;
         std::vector<double> r_m;
@@ -319,7 +321,9 @@ protected:
         std::ifstream f("../scenarios/scenario2.json");
         auto parameters = nlohmann::json::parse(f);
 
-        kf_params_.dim = parameters["KF"]["dim"].get<int>();
+        kf_params_.state_dim = parameters["KF"]["state_dim"].get<int>();
+        kf_params_.inp_dim = parameters["KF"]["inp_dim"].get<int>();
+        kf_params_.meas_dim = parameters["KF"]["meas_dim"].get<int>();
         kf_params_.dt = parameters["KF"]["dt"].get<double>();
         kf_params_.P0 = parameters["KF"]["P0"].get<std::vector<double>>();
         kf_params_.r_s = parameters["KF"]["r_s"].get<std::vector<double>>();
@@ -367,7 +371,9 @@ public:
         return init_state_covariance_matrix;
     }
 
-    void GetGtData(GtData& gtData) const {
+    GtData GetGtData() const {
+        GtData gtData;
+
         double v = scenario_params_.v;
         double L = scenario_params_.L;
         double R = scenario_params_.R;
@@ -436,8 +442,6 @@ public:
         x2 = x2.array() + 0.5 * Ax2.array() * dt * dt;
         y2 = y2.array() + 0.5 * Ay2.array() * dt * dt;
 
-        // std::cout << x1 << "\n------\n" << x2 << "\n-------\n";
-
         Vx1 = Vx1.array() + Ax1.array() * dt;
         Vy1 = Vy1.array() + Ay1.array() * dt;
 
@@ -494,21 +498,21 @@ public:
         gtData.y = y;
 
         gtData.R = (x.array().pow(2) + y.array().pow(2)).array().sqrt();
-        // gtData.phi = (y.array() / x.array()).array().atan();
+
         Eigen::VectorXd phi(x.size());
         for (int i = 0; i < x.size(); i++) {
             phi(i) = atan2(y(i), x(i));
         }
         gtData.phi = phi;
 
-
-        // std::cout << x << "\n------\n" << y << "\n------\n";
-        // std::cout << y.array() / x.array() << "\n---------\n";
-
         gtData.X = X;
+
+        return gtData;
     }
 
-    void GetMeasData(const GtData& gtData, MeasData& measData) const {
+    MeasData GetMeasData(const GtData& gtData) const {
+        MeasData measData;
+
         Eigen::VectorXd R = gtData.R;
         Eigen::VectorXd phi = gtData.phi;
 
@@ -522,15 +526,7 @@ public:
 
         measData.R = Z.col(0);
         measData.phi = Z.col(1);
-    }
 
-    GtData GetGtDataTemplate() const {
-        GtData gtData;
-        return gtData;
-    }
-
-    MeasData GetMeasDataTemplate() const {
-        MeasData measData;
         return measData;
     }
 
