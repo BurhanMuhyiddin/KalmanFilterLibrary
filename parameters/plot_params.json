@@ -2,7 +2,7 @@
     "flags": {
         "plot_gt_data": true,
         "plot_out_data": true,
-        "plot_meas_data": true,
+        "plot_meas_data": false,
         "plot_conf_interval": true
     }
 }

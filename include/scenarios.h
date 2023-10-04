@@ -219,9 +219,12 @@ public:
     }
 
     Eigen::MatrixXd GetMeasurementCovariance(int measurement_size) const {
-        const double sigma_meas = kf_params_.r[0];
-        Eigen::MatrixXd measurement_covariance = Eigen::MatrixXd(measurement_size, measurement_size);
-        measurement_covariance << sigma_meas * sigma_meas;
+        const std::vector<double> sigma_meas = kf_params_.r;
+
+        Eigen::MatrixXd measurement_covariance = Eigen::MatrixXd::Identity(measurement_size, measurement_size);
+        for (int i = 0; i < sigma_meas.size(); i++) {
+            measurement_covariance(i, i) *= pow(sigma_meas[i], 2);
+        }
 
         return measurement_covariance;
     }
@@ -342,6 +345,28 @@ protected:
     Scenario2& operator=(Scenario2&&) = delete;
 
 public:
+    Eigen::VectorXd GetInitState(int state_size) const {
+        std::vector<double> init_state = kf_params_.x0;
+        
+        Eigen::VectorXd init_state_vec(state_size);
+        for (int i = 0; i < state_size; i++) {
+            init_state_vec(i) = init_state[i];
+        }
+
+        return init_state_vec;
+    }
+
+    Eigen::MatrixXd GetInitEstimateCovariance(int state_size) {
+        std::vector<double> init_state_covariance = kf_params_.P0;
+
+        Eigen::MatrixXd init_state_covariance_matrix = Eigen::MatrixXd::Identity(state_size, state_size);
+        for (int i = 0; i < state_size; i++) {
+            init_state_covariance_matrix(i, i) = init_state_covariance[i];
+        }
+
+        return init_state_covariance_matrix;
+    }
+
     void GetGtData(GtData& gtData) const {
         double v = scenario_params_.v;
         double L = scenario_params_.L;
@@ -411,6 +436,8 @@ public:
         x2 = x2.array() + 0.5 * Ax2.array() * dt * dt;
         y2 = y2.array() + 0.5 * Ay2.array() * dt * dt;
 
+        // std::cout << x1 << "\n------\n" << x2 << "\n-------\n";
+
         Vx1 = Vx1.array() + Ax1.array() * dt;
         Vy1 = Vy1.array() + Ay1.array() * dt;
 
@@ -453,10 +480,10 @@ public:
 
         Eigen::MatrixXd X(x.rows(), 6);
         X.col(0) = x;
-        X.col(1) = y;
-        X.col(2) = vx;
-        X.col(3) = vy;
-        X.col(4) = ax;
+        X.col(1) = vx;
+        X.col(2) = ax;
+        X.col(3) = y;
+        X.col(4) = vy;
         X.col(5) = ay;
 
         gtData.ax = ax;
@@ -467,7 +494,16 @@ public:
         gtData.y = y;
 
         gtData.R = (x.array().pow(2) + y.array().pow(2)).array().sqrt();
-        gtData.phi = (y.array() / x.array()).atan();
+        // gtData.phi = (y.array() / x.array()).array().atan();
+        Eigen::VectorXd phi(x.size());
+        for (int i = 0; i < x.size(); i++) {
+            phi(i) = atan2(y(i), x(i));
+        }
+        gtData.phi = phi;
+
+
+        // std::cout << x << "\n------\n" << y << "\n------\n";
+        // std::cout << y.array() / x.array() << "\n---------\n";
 
         gtData.X = X;
     }
@@ -479,6 +515,8 @@ public:
         Eigen::MatrixXd Z(R.rows(), R.cols() + phi.cols());
         Z.col(0) = R;
         Z.col(1) = phi;
+
+        // std::cout << Z.col(1) << "\n---------\n";
 
         add_noise(Z, kf_params_.r_m, noise_gen_params_.seed);
 
@@ -494,6 +532,67 @@ public:
     MeasData GetMeasDataTemplate() const {
         MeasData measData;
         return measData;
+    }
+
+    Eigen::MatrixXd GetProcessNoiseCovariance(int state_size) const {
+        const double dt = kf_params_.dt;
+        const double sig_a = scenario_params_.sig_a[0];
+        const double var_acc = sig_a * sig_a;
+        Eigen::MatrixXd process_noise_covariance = Eigen::MatrixXd(state_size, state_size);
+        process_noise_covariance << pow(dt,4)*var_acc/4.0, pow(dt,3)*var_acc/2.0, pow(dt,2)*var_acc/2.0, 0                    , 0                    , 0                    ,
+                                    pow(dt,3)*var_acc/2.0, pow(dt,2)*var_acc    , dt*var_acc           , 0                    , 0                    , 0                    ,
+                                    pow(dt,2)*var_acc/2.0, dt*var_acc           , 1                    , 0                    , 0                    , 0                    ,
+                                    0                    , 0                    , 0                    , pow(dt,4)*var_acc/4.0, pow(dt,3)*var_acc/2.0, pow(dt,2)*var_acc/2.0,
+                                    0                    , 0                    , 0                    , pow(dt,3)*var_acc/2.0, pow(dt,2)*var_acc    , dt*var_acc           ,
+                                    0                    , 0                    , 0                    , pow(dt,2)*var_acc/2.0, dt*var_acc           , 1                    ;
+
+        return process_noise_covariance;
+    }
+
+    Eigen::MatrixXd GetMeasurementCovariance(int measurement_size) const {
+        const std::vector<double> sigma_meas = kf_params_.r_m;
+
+        Eigen::MatrixXd measurement_covariance = Eigen::MatrixXd::Identity(measurement_size, measurement_size);
+        for (int i = 0; i < sigma_meas.size(); i++) {
+            measurement_covariance(i, i) *= pow(sigma_meas[i], 2);
+        }
+
+        return measurement_covariance;
+    }
+
+    std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GetHMatrix(const Eigen::VectorXd& current_state, int state_size, int meas_size) const {
+        double x = current_state(0);
+        double y = current_state(3);
+
+        double r = sqrt(x * x + y * y);
+        double phi = atan2(y, x);
+
+        Eigen::MatrixXd Hx(meas_size, 1);
+        Hx << r, phi;
+
+        double x2y2 = x * x + y * y;
+        double sqrt_x2y2 = sqrt(x2y2);
+        Eigen::MatrixXd dHx(meas_size, state_size);
+        dHx << x / sqrt_x2y2, 0, 0, y / sqrt_x2y2, 0, 0,
+               -y / x2y2, 0, 0, x / x2y2, 0, 0;
+
+        return {Hx, dHx};
+    }
+
+    std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GetFMatrix(int state_size) const {
+        double dt = kf_params_.dt;
+
+        Eigen::MatrixXd Fx(state_size, state_size);
+        Fx << 1, dt, 0.5 * dt * dt, 0,  0,             0,
+              0,  1,            dt, 0,  0,             0,
+              0,  0,             1, 0,  0,             0,
+              0,  0,             0, 1, dt, 0.5 * dt * dt,
+              0,  0,             0, 0,  1,            dt,
+              0,  0,             0, 0,  0,             1;
+
+        Eigen::MatrixXd dFx = Fx; // because process is linear
+
+        return {Fx, dFx};
     }
 
     static Scenario2& GetInstance() {
