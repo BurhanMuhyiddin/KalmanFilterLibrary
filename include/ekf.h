@@ -42,7 +42,7 @@ public:
         // std::cout << "estimateCovariance: " << estimateCovariance.size() << "\n";
 
         auto& scenario2 = Scenario2::GetInstance();
-        auto observation_matrix = scenario2.GetHMatrix(state, stateSize_, measurementSize_);
+        auto observation_matrix = scenario2.GetHx(state, stateSize_, measurementSize_);
 
         Eigen::MatrixXd Hx = observation_matrix.first;
         Eigen::MatrixXd dHx = observation_matrix.second;

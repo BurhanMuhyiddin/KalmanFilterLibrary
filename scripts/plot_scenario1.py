@@ -7,11 +7,11 @@ import json
 
 SCENARIO1_PARAMS = "scenarios/scenario1.json"
 PATH_PLOT_PARAMS = "parameters/plot_params.json"
-PATH_GT_ALTITUDE = "data/gtAltitude.txt"
-PATH_MEAS_ALTITUDE = "data/measAltitude.txt"
-PATH_GT_VELOCITY = "data/gtVelocity.txt"
-PATH_ESTIMATED_STATE = "data/state.txt"
-PATH_ESTIMATE_COVARIANCE = "data/estimateCovariance.txt"
+PATH_GT_ALTITUDE = "data/LKF/gtAltitude.txt"
+PATH_MEAS_ALTITUDE = "data/LKF/measAltitude.txt"
+PATH_GT_VELOCITY = "data/LKF/gtVelocity.txt"
+PATH_ESTIMATED_STATE = "data/LKF/state.txt"
+PATH_ESTIMATE_COVARIANCE = "data/LKF/estimateCovariance.txt"
 
 # Read plot parameters
 plot_params_file = open(PATH_PLOT_PARAMS)

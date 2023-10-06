@@ -6,14 +6,32 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <experimental/filesystem>
 
 #include <Eigen/Dense>
 
+namespace fs = std::experimental::filesystem;
+
 class DataLogger {
 public:
-    DataLogger(const std::string& matrixName, const Eigen::MatrixXd& matrix, const std::pair<int, int>& dimension, const std::vector<std::string>& columnNames = {})
+    DataLogger(const std::string& path, 
+               const std::string& matrixName,
+               const Eigen::MatrixXd& matrix,
+               const std::pair<int, int>& dimension,
+               const std::vector<std::string>& columnNames = {})
         : matrixName_(matrixName), matrix_(matrix), dimension_(dimension), columnNames_(columnNames) {
-        fileName_ = "../data/" + matrixName_ + ".txt";
+        if (!fs::exists(path)) {
+            if (fs::create_directories(path)) {
+                std::cout << "Folder created successfully: " << path << std::endl;
+            } else {
+                std::cout << "Failed to create folder: " << path.c_str() << std::endl;
+            }
+        } else {
+            std::cout << "Folder already exists: " << path.c_str() << std::endl;
+        }
+
+        // fileName_ = "../data/" + matrixName_ + ".txt";
+        fileName_ = fs::path(path) / (matrixName_ + ".txt");
         file_.open(fileName_);
 
         if (!file_.is_open()) {
@@ -72,7 +90,7 @@ private:
     }
 
     std::string matrixName_;
-    std::string fileName_;
+    fs::path fileName_;
     Eigen::MatrixXd matrix_;
     std::pair<int, int> dimension_;
     std::vector<std::string> columnNames_;

@@ -25,10 +25,10 @@ int main()
 
     ExtendedKalmanFilter EKF(stateSize, measurementSize, inputSize, initState, initEstimateCovariance);
 
-    auto stateTransitionMatrix = scenario2.GetFMatrix(stateSize);
+    auto stateTransitionMatrix = scenario2.GetFx(stateSize);
     EKF.SetStateTransitionMatrix(stateTransitionMatrix);
 
-    auto observationMatrix = scenario2.GetHMatrix(initState, stateSize, measurementSize);
+    auto observationMatrix = scenario2.GetHx(initState, stateSize, measurementSize);
     EKF.SetObservationMatrix(observationMatrix);
 
     // Eigen::MatrixXd controlMatrix = scenario1.GetControlMatrix(stateSize, inputSize);

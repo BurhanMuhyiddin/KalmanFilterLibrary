@@ -58,7 +58,8 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "valarray": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "list": "cpp"
     },
     "cmake.configureOnOpen": false
 }

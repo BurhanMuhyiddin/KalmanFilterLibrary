@@ -12,6 +12,8 @@ set(SOURCE_FILES
     # kalman_filter.cpp
 )
 
-add_executable(${PROJECT_NAME} ekf_test.cpp ${SOURCE_FILES})
+link_libraries(stdc++fs)
+
+add_executable(${PROJECT_NAME} lkf_test.cpp ${SOURCE_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${EIGEN3_INCLUDE_DIRS})
