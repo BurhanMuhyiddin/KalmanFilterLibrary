@@ -10,9 +10,9 @@ int main()
     Scenario2& scenario2 = Scenario2::GetInstance();
 
     // Read data
-    auto gtData = scenario2.GetGtData();
+    auto gt_data = scenario2.GetGtData();
 
-    auto measData = scenario2.GetMeasData(gtData);
+    auto meas_data = scenario2.GetMeasData(gt_data);
 
     // Create KF instance and initialize
     int stateSize = scenario2.kf_params_.state_dim;
@@ -25,14 +25,7 @@ int main()
 
     ExtendedKalmanFilter EKF(stateSize, measurementSize, inputSize, initState, initEstimateCovariance);
 
-    auto stateTransitionMatrix = scenario2.GetFx(stateSize);
-    EKF.SetStateTransitionMatrix(stateTransitionMatrix);
-
-    auto observationMatrix = scenario2.GetHx(initState, stateSize, measurementSize);
-    EKF.SetObservationMatrix(observationMatrix);
-
-    // Eigen::MatrixXd controlMatrix = scenario1.GetControlMatrix(stateSize, inputSize);
-    // LKF.SetControlMatrix(controlMatrix);
+    EKF.SetScenario(&scenario2);
 
     Eigen::MatrixXd processNoiseCovariance = scenario2.GetProcessNoiseCovariance(stateSize);
     EKF.SetProcessNoiseCovariance(processNoiseCovariance);
@@ -41,25 +34,24 @@ int main()
     EKF.SetMeasurementCovariance(measurementCovariance);
 
     // Buffers to save intermediate data
-    Eigen::MatrixXd estimatedStateBuffer = Eigen::MatrixXd(measData.R.size(), stateSize);
-    Eigen::MatrixXd estimateCovarianceBuffer = Eigen::MatrixXd(measData.R.size()*stateSize, stateSize);
+    int num_time_steps = meas_data.first.rows();
+    Eigen::MatrixXd estimatedStateBuffer = Eigen::MatrixXd(num_time_steps, stateSize);
+    Eigen::MatrixXd estimateCovarianceBuffer = Eigen::MatrixXd(num_time_steps*stateSize, stateSize);
 
     Eigen::VectorXd measurement = Eigen::VectorXd(measurementSize);
 
-    for (int n = 0; n < measData.R.size(); n++) {
-        double R_n = measData.R(n);
-        double phi_n = measData.phi(n);
+    for (int n = 0; n < num_time_steps; n++) {
+        double R_n = meas_data.first(n, 0);
+        double phi_n = meas_data.first(n, 1);
 
         measurement(0) = R_n;
         measurement(1) = phi_n;
 
         EKF.Predict();
-        // std::cout << measurement << "\n-------\n";
         EKF.Update(measurement);
 
         auto state = EKF.GetState();
         auto estimateCovariance = EKF.GetEstimateCovariance();
-        // std::cout << "After update: " << state << "\n-------\n";
 
         for (int i = 0; i < stateSize; i++) {
             estimatedStateBuffer(n, i) = state(i);
@@ -69,13 +61,13 @@ int main()
     }
 
     // Log data
-    DataLogger stateDataLogger("EKF/state", estimatedStateBuffer, {stateSize, 1}, {"x", "vx", "ax", "y", "vy", "ay"});
+    DataLogger stateDataLogger("../data/EKF", "state", estimatedStateBuffer, {stateSize, 1}, {"x", "vx", "ax", "y", "vy", "ay"});
     stateDataLogger.AppendData();
 
-    DataLogger estimateCovarianceDataLogger("EKF/estimateCovariance", estimateCovarianceBuffer, {stateSize, stateSize});
+    DataLogger estimateCovarianceDataLogger("../data/EKF", "estimateCovariance", estimateCovarianceBuffer, {stateSize, stateSize});
     estimateCovarianceDataLogger.AppendData();
 
-    DataLogger gtStateLogger("EKF/gtState", gtData.X, {stateSize, 1}, {"gtX", "gtVx", "gtAx", "gtY", "gtVy", "gtAy"});
+    DataLogger gtStateLogger("../data/EKF", "gtState", gt_data.first, {gt_data.first.cols(), 1}, gt_data.second);
     gtStateLogger.AppendData();
 
     return 0;

@@ -31,6 +31,8 @@ int main()
 
     LinearKalmanFilter LKF(stateSize, measurementSize, inputSize, initState, initEstimateCovariance);
 
+    LKF.SetScenario(&scenario1);
+
     Eigen::MatrixXd stateTransitionMatrix = scenario1.GetF(stateSize);
     LKF.SetStateTransitionMatrix(stateTransitionMatrix);
 
@@ -47,7 +49,7 @@ int main()
     LKF.SetMeasurementCovariance(measurementCovariance);
 
     // Buffers to save intermediate data
-    int num_time_steps = meas_data.first.size();
+    int num_time_steps = meas_data.first.rows();
     Eigen::MatrixXd estimatedStateBuffer = Eigen::MatrixXd(num_time_steps, stateSize);
     Eigen::MatrixXd estimateCovarianceBuffer = Eigen::MatrixXd(num_time_steps*stateSize, stateSize);
 

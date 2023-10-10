@@ -5,6 +5,8 @@
 
 #include <Eigen/Dense>
 
+#include "scenarios.h"
+
 /**
  * @brief Base class for Kalman filters.
  * 
@@ -20,7 +22,7 @@ public:
      * @param inputSize             Size of the input vector
      */
     KalmanFilter(int stateSize, int measurementSize, int inputSize)
-        : stateSize_(stateSize), measurementSize_(measurementSize), inputSize_(inputSize) {
+        : stateSize_(stateSize), measurementSize_(measurementSize), inputSize_(inputSize), scenario_(nullptr) {
         state_.resize(stateSize);
         estimateCovariance_.resize(stateSize, stateSize);
         measurementCovariance_.resize(measurementSize, measurementSize);
@@ -33,7 +35,7 @@ public:
                 const Eigen::VectorXd& initState,
                 const Eigen::MatrixXd& initEstimateCovariance)
         : stateSize_(stateSize), measurementSize_(measurementSize), inputSize_(inputSize),
-          state_(initState), estimateCovariance_(initEstimateCovariance) {
+          state_(initState), estimateCovariance_(initEstimateCovariance), scenario_(nullptr) {
         measurementCovariance_.resize(measurementSize, measurementSize);
         processNoiseCovariance_.resize(stateSize, stateSize);
     }
@@ -81,6 +83,10 @@ public:
         processNoiseCovariance_ = processNoiseCovariance;
     }
 
+    void SetScenario(BaseScenario* scenario) {
+        scenario_ = scenario;
+    }
+
     /**
      * @brief Get the current state estimate.
      * 
@@ -108,6 +114,8 @@ protected:
     Eigen::MatrixXd estimateCovariance_;            /**< Estimate covariance matrix [P] */
     Eigen::MatrixXd measurementCovariance_;         /**< Measurement covariance [R]*/
     Eigen::MatrixXd processNoiseCovariance_;        /**< Process noise covariance [Q] */
+
+    BaseScenario* scenario_;
 };
 
 #endif // KALMAN_FILTER_H_
