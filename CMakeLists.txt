@@ -14,6 +14,6 @@ set(SOURCE_FILES
 
 link_libraries(stdc++fs)
 
-add_executable(${PROJECT_NAME} ekf_test.cpp ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} ukf_test.cpp ${SOURCE_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${EIGEN3_INCLUDE_DIRS})

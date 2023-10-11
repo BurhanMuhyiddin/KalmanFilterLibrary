@@ -15,9 +15,9 @@ import json
 
 SCENARIO2_PARAMS = "scenarios/scenario2.json"
 PATH_PLOT_PARAMS = "parameters/plot_params.json"
-PATH_GT_STATE = "data/EKF/gtState.txt"
-PATH_ESTIMATED_STATE = "data/EKF/state.txt"
-PATH_ESTIMATE_COVARIANCE = "data/EKF/estimateCovariance.txt"
+PATH_GT_STATE = "data/UKF/gtState.txt"
+PATH_ESTIMATED_STATE = "data/UKF/state.txt"
+PATH_ESTIMATE_COVARIANCE = "data/UKF/estimateCovariance.txt"
 
 # Read plot parameters
 plot_params_file = open(PATH_PLOT_PARAMS)

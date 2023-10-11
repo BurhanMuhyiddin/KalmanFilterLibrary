@@ -23,7 +23,7 @@ public:
         Eigen::MatrixXd Fx = scenario_->GetFx(state, stateSize_);
         Eigen::MatrixXd dFx = scenario_->GetdFx(state, stateSize_);
 
-        state = Fx * state;
+        state = Fx;
         SetState(state);
 
         estimateCovariance = dFx * estimateCovariance * dFx.transpose() + processNoiseCovariance_;

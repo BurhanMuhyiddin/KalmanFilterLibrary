@@ -20,8 +20,8 @@ public:
     virtual Eigen::VectorXd GetInitState(int state_size) const = 0;
     virtual Eigen::MatrixXd GetInitEstimateCovariance(int state_size) const = 0;
 
-    virtual Eigen::MatrixXd GetFx(const Eigen::VectorXd& current_state, int state_size) const = 0;
-    virtual Eigen::MatrixXd GetHx(const Eigen::VectorXd& current_state, int state_size, int meas_size) const = 0;
+    virtual Eigen::MatrixXd GetFx(const Eigen::MatrixXd& current_state, int state_size) const = 0;
+    virtual Eigen::MatrixXd GetHx(const Eigen::MatrixXd& current_state, int state_size, int meas_size) const = 0;
     virtual Eigen::MatrixXd GetdFx(const Eigen::VectorXd& current_state, int state_size) const = 0;
     virtual Eigen::MatrixXd GetdHx(const Eigen::VectorXd& current_state, int state_size, int meas_size) const = 0;
 
@@ -248,11 +248,11 @@ public:
         return control_matrix;
     }
 
-    Eigen::MatrixXd GetFx(const Eigen::VectorXd& current_state, int state_size) const override {
+    Eigen::MatrixXd GetFx(const Eigen::MatrixXd& current_state, int state_size) const override {
         return Eigen::MatrixXd::Zero(0,0);
     }
 
-    Eigen::MatrixXd GetHx(const Eigen::VectorXd& current_state, int state_size, int meas_size) const override {
+    Eigen::MatrixXd GetHx(const Eigen::MatrixXd& current_state, int state_size, int meas_size) const override {
         return Eigen::MatrixXd::Zero(0,0);
     }
 
@@ -533,7 +533,7 @@ public:
         return {U, {}};
     }
 
-    Eigen::MatrixXd GetFx(const Eigen::VectorXd& current_state, int state_size) const override {
+    Eigen::MatrixXd GetFx(const Eigen::MatrixXd& current_state, int state_size) const override {
         double dt = kf_params_.dt;
 
         Eigen::MatrixXd Fx(state_size, state_size);
@@ -544,18 +544,26 @@ public:
               0,  0,             0, 0,  1,            dt,
               0,  0,             0, 0,  0,             1;
         
+        Fx = Fx * current_state;
+
         return Fx;
     }
 
-    Eigen::MatrixXd GetHx(const Eigen::VectorXd& current_state, int state_size, int meas_size) const override {
-        double x = current_state(0);
-        double y = current_state(3);
+    Eigen::MatrixXd GetHx(const Eigen::MatrixXd& current_state, int state_size, int meas_size) const override {
+        Eigen::VectorXd x = current_state.row(0);
+        Eigen::VectorXd y = current_state.row(3);
 
-        double r = sqrt(x * x + y * y);
-        double phi = atan2(y, x);
+        // double r = sqrt(x * x + y * y);
+        Eigen::VectorXd r = (x.array().pow(2) + y.array().pow(2)).array().sqrt();
+        Eigen::VectorXd phi(r);
+        for (int i = 0; i < phi.size(); i++) {
+            phi(i) = atan2(y(i), x(i));
+        }
 
-        Eigen::MatrixXd Hx(meas_size, 1);
-        Hx << r, phi;
+        Eigen::MatrixXd Hx(meas_size, r.size());
+        // Hx << r, phi;
+        Hx.row(0) = r;
+        Hx.row(1) = phi;
 
         return Hx;
     }
